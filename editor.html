@@ -1,0 +1,16 @@
+<body>
+<h1>Hi!</h1>
+
+<script>
+  const raw = sessionStorage.getItem('skin');
+
+  if (!raw) {
+    // someone typed the URL directly, or refreshed after the tab was closed
+    location.href = 'index.html';
+  } else {
+    const choice = JSON.parse(raw);
+    console.log('editor got:', choice);  
+  }
+</script>
+
+</body>
