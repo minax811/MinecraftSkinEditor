@@ -57,12 +57,23 @@
     .upload { width: 280px; height: 220px; }
     .fresh  { width: 280px; height: 120px; }
   }
+
+  .dropzone.dragging .upload {
+    background: #ffffff;
+    border-color: #4caf50;
+  }
+
+  .error { color: #ff6b6b; font-size: 13px; min-height: 1.2em; margin-top: 8px; text-align: center; }
 </style>
 </head>
 <body>
 
-  <div class="choices">
-    <button class="box upload">Drop a png in here, or click to choose one</button>
+<div class="choices">
+    <div class="dropzone">
+      <button class="box upload">Drop a PNG here, or click to choose one</button>
+      <p class="error" id="error"></p>
+    </div>
+
     <button class="box fresh">Start with a blank skin</button>
 
     <input type="file" id="picker" accept="image/png" hidden>
