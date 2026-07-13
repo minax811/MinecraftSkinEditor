@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skin Editor</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #2b2f3a;
+    font-family: system-ui, sans-serif;
+  }
+  .choices {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+  }
+
+  .box {
+
+    border-radius: 16px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+
+    font-size: 15px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .upload {
+    width: 360px;
+    height: 340px;
+    background: #d5d7db;
+    color: #3a3f4a;
+    border: 2px dashed #9aa0a9;
+  }
+
+  .fresh {
+    width: 240px;
+    height: 240px;
+    background: #4caf50;
+    color: #fff;
+    border: 2px solid #429947;
+  }
+
+  @media (max-width: 640px) {
+    .choices { flex-direction: column; }
+    .upload { width: 280px; height: 220px; }
+    .fresh  { width: 280px; height: 120px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="choices">
+    <button class="box upload">Drop a png in here, or click to choose one</button>
+    <button class="box fresh">Start with a blank skin</button>
+  </div>
+
+</body>
+</html>
