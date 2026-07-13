@@ -64,14 +64,11 @@
   <div class="choices">
     <button class="box upload">Drop a png in here, or click to choose one</button>
     <button class="box fresh">Start with a blank skin</button>
+
+    <input type="file" id="picker" accept="image/png" hidden>
   </div>
 
-  <script>
-  document.querySelector('.fresh').addEventListener('click', () => {
-    sessionStorage.setItem('skin', JSON.stringify({ mode: 'default' }));
-    location.href = 'editor.html';
-  });
-</script>
+<script src="js/home.js"></script>
 
 </body>
 </html>
