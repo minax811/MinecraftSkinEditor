@@ -4,14 +4,14 @@ const drop    = document.querySelector('.dropzone');
 const errorEl = document.getElementById('error');
 
 
-// ── green button: start from the default skin ─────────────
+// green button starts with a default skin
 document.querySelector('.fresh').addEventListener('click', () => {
   sessionStorage.setItem('skin', JSON.stringify({ mode: 'default' }));
   location.href = 'editor.html';
 });
 
 
-// ── grey box: click to open the file picker ───────────────
+// grey box : cloick to open
 document.querySelector('.upload').addEventListener('click', () => picker.click());
 
 picker.addEventListener('change', () => {
@@ -20,9 +20,9 @@ picker.addEventListener('change', () => {
 });
 
 
-// ── grey box: drag and drop ───────────────────────────────
+// grey box: drag and drop option
 drop.addEventListener('dragover', e => {
-  e.preventDefault();                // keeps the browser from opening the image
+  e.preventDefault();                // preventing the browser from opening the image
   drop.classList.add('dragging');
 });
 
@@ -35,11 +35,11 @@ drop.addEventListener('drop', e => {
   drop.classList.remove('dragging');
 
   const file = e.dataTransfer.files[0];
-  if (file) handleFile(file);        // same validation as the picker
+  if (file) handleFile(file);     
 });
 
 
-// ── the one place a file gets checked ─────────────────────
+// Validation checker area fr
 async function handleFile(file) {
   errorEl.textContent = '';          // clear any previous complaint
 
@@ -52,7 +52,7 @@ async function handleFile(file) {
     await img.decode();              // throws if it isn't really a PNG
 
     if (img.width !== 64 || img.height !== 64)
-      throw new Error(`Skins must be 64×64. That one is ${img.width}×${img.height}.`);
+      throw new Error(`Skins must be 64×64. That one is ${img.width}×${img.height}.`);        // If skin isnt 64 x64 pixels
 
     sessionStorage.setItem('skin', JSON.stringify({ mode: 'upload', data: url }));
     location.href = 'editor.html';
