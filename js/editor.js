@@ -134,13 +134,14 @@ placeCamera();
 let dragging = false, last = null;
 
 view.addEventListener('pointerdown', e => {
-  if (e.shiftKey) {                          // shift = paint mode
+  if (e.shiftKey) {
+    snapshot();                   // ← save the state before this stroke
     painting = true;
     lastPixel = null;
-    paintAt(e, e.button === 2);              // right button erases
+    paintAt(e, e.button === 2);
     return;
   }
-  dragging = true;                           // otherwise orbit
+  dragging = true;
   last = { x: e.clientX, y: e.clientY };
 });
 
@@ -182,6 +183,15 @@ let painting = false;
 let lastPixel = null;
 let color = '#ff0000';      // ← add this
 
+const undoStack = [];
+const redoStack = [];
+
+
+function snapshot() {
+  undoStack.push(sctx.getImageData(0, 0, SIZE, SIZE));
+  redoStack.length = 0;           // a new action wipes the redo history
+  if (undoStack.length > 50) undoStack.shift();   // cap memory
+}
 
 function paintAt(e, erase = false) {
   const r = view.getBoundingClientRect();
@@ -253,4 +263,27 @@ document.getElementById('save').addEventListener('click', () => {
   link.download = 'skin.png';
   link.href = skin.toDataURL('image/png');
   link.click();
+});
+
+// ── undo / redo ───────────────────────────────────────────
+addEventListener('keydown', e => {
+  const key = e.key.toLowerCase();
+
+  if (e.ctrlKey && key === 'z') {
+    e.preventDefault();
+    if (!undoStack.length) return;
+    redoStack.push(sctx.getImageData(0, 0, SIZE, SIZE));   // save current for redo
+    sctx.putImageData(undoStack.pop(), 0, 0);              // restore previous
+    texture.needsUpdate = true;
+    show();
+  }
+
+  if (e.ctrlKey && (key === 'y' || (key === 'z' && e.shiftKey))) {
+    e.preventDefault();
+    if (!redoStack.length) return;
+    undoStack.push(sctx.getImageData(0, 0, SIZE, SIZE));
+    sctx.putImageData(redoStack.pop(), 0, 0);
+    texture.needsUpdate = true;
+    show();
+  }
 });
