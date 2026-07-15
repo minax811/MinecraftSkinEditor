@@ -217,8 +217,22 @@ colorInput.addEventListener('input', e => { color = e.target.value; });
 
 // ── quick swatches ────────────────────────────────────────
 const PALETTE = [
-  '#000000', '#ffffff', '#ff0000', '#00a000',
-  '#0060ff', '#ffd000', '#d88015', '#d8ab7d',
+  // skin tones
+  '#ffd9b3', '#f0b98d', '#c68642', '#8d5524', '#5c3a21',
+  // hair / brown
+  '#e8c39e', '#a5673f', '#6b4423', '#3b2417', '#1a1110',
+  // reds / warm
+  '#e63946', '#a4243b', '#d68c45', '#f4a261', '#e9c46a',
+  // greens
+  '#8ab17d', '#588157', '#3a5a40', '#2d6a4f', '#1b4332',
+  // blues / denim
+  '#a8dadc', '#457b9d', '#1d3557', '#2b3a67', '#0d1b2a',
+  // purples / accent
+  '#b298dc', '#7b2cbf', '#5a189a', '#9d4edd', '#c9184a',
+  // greys / metal
+  '#ffffff', '#dee2e6', '#adb5bd', '#6c757d', '#343a40',
+  // pure
+  '#000000', '#f8f9fa', '#ffb703', '#fb8500', '#023047',
 ];
 
 const swatches = document.getElementById('swatches');
@@ -231,4 +245,12 @@ PALETTE.forEach(c => {
     colorInput.value = c;        // keep the picker in sync
   });
   swatches.appendChild(sw);
+});
+
+// ── export ────────────────────────────────────────────────
+document.getElementById('save').addEventListener('click', () => {
+  const link = document.createElement('a');
+  link.download = 'skin.png';
+  link.href = skin.toDataURL('image/png');
+  link.click();
 });
