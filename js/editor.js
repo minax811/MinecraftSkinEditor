@@ -11,7 +11,7 @@ const pctx = preview.getContext('2d');
 preview.width = preview.height = SIZE * 6;      // 6× zoom 
 
 
-// figuring out what the homepage sent
+// figuring out what the homepage sent 
 const raw = sessionStorage.getItem('skin');
 if (!raw) location.href = 'index.html';
 
@@ -54,7 +54,7 @@ function skinBox(w, h, d, u, v) {
   const geo = new THREE.BoxGeometry(w, h, d);
   const uv  = geo.attributes.uv;
 
-  // three.js face order: +X, -X, +Y, -Y, +Z, -Z
+  // face order: +X, -X, +Y, -Y, +Z, -Z
   const rects = [
     [u + d + w,     v + d, d, h],   // +X  left side of the body
     [u,             v + d, d, h],   // -X  right side
@@ -134,14 +134,18 @@ placeCamera();
 let dragging = false, last = null;
 
 view.addEventListener('pointerdown', e => {
-  if (e.shiftKey) { paintAt(e); return; }  
-  dragging = true;
+  if (e.shiftKey) {                          // shift = paint mode
+    painting = true;
+    lastPixel = null;
+    paintAt(e, e.button === 2);              // right button erases
+    return;
+  }
+  dragging = true;                           // otherwise orbit
   last = { x: e.clientX, y: e.clientY };
 });
 
-addEventListener('pointerup', () => { dragging = false; });
-
 view.addEventListener('pointermove', e => {
+  if (painting) { paintAt(e, e.buttons === 2); return; }
   if (!dragging) return;
   yaw   -= (e.clientX - last.x) * 0.01;
   pitch  = Math.max(0.1, Math.min(3.0, pitch - (e.clientY - last.y) * 0.01));
@@ -149,6 +153,9 @@ view.addEventListener('pointermove', e => {
   placeCamera();
 });
 
+addEventListener('pointerup', () => { dragging = false; painting = false; });
+
+view.addEventListener('contextmenu', e => e.preventDefault());
 
 // ── zoom ──────────────────
 view.addEventListener('wheel', e => {
@@ -172,27 +179,33 @@ render();
 const raycaster = new THREE.Raycaster();
 const pointer   = new THREE.Vector2();
 let color = '#ff0000';                 // hard-coded for now, UI comes later
+let painting = false;
+let lastPixel = null;      // so we don't repaint the same pixel 60x/second
 
-function paintAt(e) {
-  // where is the mouse, in -1..1 space that three.js wants
+function paintAt(e, erase = false) {
   const r = view.getBoundingClientRect();
   pointer.x =  ((e.clientX - r.left) / r.width)  * 2 - 1;
   pointer.y = -((e.clientY - r.top)  / r.height) * 2 + 1;
 
-  // shoot a ray from the camera through that point
   raycaster.setFromCamera(pointer, camera);
   const hits = raycaster.intersectObjects(player.children);
-  if (!hits.length) return;            // clicked empty space
+  if (!hits.length) return;
 
-  // three.js hands us the texture coordinate for free
   const uv = hits[0].uv;
   const x = Math.floor(uv.x * SIZE);
-  const y = Math.floor((1 - uv.y) * SIZE);   // undo the Y flip
+  const y = Math.floor((1 - uv.y) * SIZE);
 
-  // paint that one pixel
-  sctx.fillStyle = color;
-  sctx.fillRect(x, y, 1, 1);
 
-  texture.needsUpdate = true;          // GPU: re-read the canvas
-  show();                              // update the flat preview too
+  if (lastPixel && lastPixel.x === x && lastPixel.y === y) return;
+  lastPixel = { x, y };
+
+  if (erase) {
+    sctx.clearRect(x, y, 1, 1);        // back to transparent
+  } else {
+    sctx.fillStyle = color;
+    sctx.fillRect(x, y, 1, 1);
+  }
+
+  texture.needsUpdate = true;
+  show();
 }
