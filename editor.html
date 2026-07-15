@@ -1,7 +1,16 @@
 <body>
-<h1>Hi!</h1>
-<canvas id="preview"></canvas>
-<canvas id="view"></canvas>
+<link rel="stylesheet" href="style.css">
+<div class="editor">
+    <canvas id="preview"></canvas>
+
+    <canvas id="view"></canvas>
+
+    <div class="panel">
+      <input type="color" id="color" value="#ff0000">
+      <div class="swatches" id="swatches"></div>
+    </div>
+  </div>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="js/editor.js"></script>
 </body>

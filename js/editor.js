@@ -178,9 +178,10 @@ render();
 
 const raycaster = new THREE.Raycaster();
 const pointer   = new THREE.Vector2();
-let color = '#ff0000';                 // hard-coded for now, UI comes later
 let painting = false;
-let lastPixel = null;      // so we don't repaint the same pixel 60x/second
+let lastPixel = null;
+let color = '#ff0000';      // ← add this
+
 
 function paintAt(e, erase = false) {
   const r = view.getBoundingClientRect();
@@ -209,3 +210,25 @@ function paintAt(e, erase = false) {
   texture.needsUpdate = true;
   show();
 }
+
+// ── colour picker ─────────────────────────────────────────
+const colorInput = document.getElementById('color');
+colorInput.addEventListener('input', e => { color = e.target.value; });
+
+// ── quick swatches ────────────────────────────────────────
+const PALETTE = [
+  '#000000', '#ffffff', '#ff0000', '#00a000',
+  '#0060ff', '#ffd000', '#d88015', '#d8ab7d',
+];
+
+const swatches = document.getElementById('swatches');
+PALETTE.forEach(c => {
+  const sw = document.createElement('div');
+  sw.className = 'sw';
+  sw.style.background = c;
+  sw.addEventListener('click', () => {
+    color = c;
+    colorInput.value = c;        // keep the picker in sync
+  });
+  swatches.appendChild(sw);
+});
