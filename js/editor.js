@@ -82,26 +82,39 @@ function skinBox(w, h, d, u, v) {
   return geo;
 }
 
-
 // ── the body: 1 unit = 1 pixel ────────────────────────────
 const PARTS = [
-  //  w   h   d    x    y    sheet position
-  [   8,  8,  8,   0,  28,   0, 0  ],   // head
-  [   8, 12,  4,   0,  18,  16, 16 ],   // body
-  [   4, 12,  4,  -6,  18,  40, 16 ],   // right arm
-  [   4, 12,  4,   6,  18,  32, 48 ],   // left arm
-  [   4, 12,  4,  -2,   6,   0, 16 ],   // right leg
-  [   4, 12,  4,   2,   6,  16, 48 ],   // left leg
+  //  w   h   d    x    y   base-uv   overlay-uv
+  [   8,  8,  8,   0,  28,   0, 0,    32, 0  ],   // head / hat
+  [   8, 12,  4,   0,  18,  16, 16,   16, 32 ],   // body / jacket
+  [   4, 12,  4,  -6,  18,  40, 16,   40, 32 ],   // right arm
+  [   4, 12,  4,   6,  18,  32, 48,   48, 48 ],   // left arm
+  [   4, 12,  4,  -2,   6,   0, 16,    0, 32 ],   // right leg
+  [   4, 12,  4,   2,   6,  16, 48,    0, 48 ],   // left leg
 ];
-
 const scene    = new THREE.Scene();
 const player   = new THREE.Group();
-const material = new THREE.MeshBasicMaterial({ map: texture });
+const baseMat = new THREE.MeshBasicMaterial({ map: texture });
+const overMat = new THREE.MeshBasicMaterial({
+  map: texture,
+  transparent: true,
+  alphaTest: 0.5,
+  side: THREE.DoubleSide,
+});
 
-PARTS.forEach(([w, h, d, x, y, u, v]) => {
-  const mesh = new THREE.Mesh(skinBox(w, h, d, u, v), material);
-  mesh.position.set(x, y, 0);
-  player.add(mesh);
+const baseMeshes = [];
+const overMeshes = [];
+
+PARTS.forEach(([w, h, d, x, y, ub, vb, uo, vo]) => {
+  const base = new THREE.Mesh(skinBox(w, h, d, ub, vb), baseMat);
+  base.position.set(x, y, 0);
+  player.add(base);
+  baseMeshes.push(base);
+
+  const over = new THREE.Mesh(skinBox(w + 1, h + 1, d + 1, uo, vo), overMat);
+  over.position.set(x, y, 0);
+  player.add(over);
+  overMeshes.push(over);
 });
 
 scene.add(player);
@@ -182,6 +195,7 @@ const pointer   = new THREE.Vector2();
 let painting = false;
 let lastPixel = null;
 let color = '#ff0000';      // ← add this
+let layer = 'base';     // which layer painting targets
 
 const undoStack = [];
 const redoStack = [];
@@ -199,7 +213,8 @@ function paintAt(e, erase = false) {
   pointer.y = -((e.clientY - r.top)  / r.height) * 2 + 1;
 
   raycaster.setFromCamera(pointer, camera);
-  const hits = raycaster.intersectObjects(player.children);
+  const targets = layer === 'base' ? baseMeshes : overMeshes;
+  const hits = raycaster.intersectObjects(targets);
   if (!hits.length) return;
 
   const uv = hits[0].uv;
@@ -286,4 +301,31 @@ addEventListener('keydown', e => {
     texture.needsUpdate = true;
     show();
   }
+});
+
+
+//──────────────────Overlay─────────────────────────
+const btnBase = document.getElementById('layerBase');
+const btnOver = document.getElementById('layerOver');
+
+function setLayer(which) {
+  layer = which;
+  btnBase.classList.toggle('active', which === 'base');
+  btnOver.classList.toggle('active', which === 'overlay');
+
+  // show only the layer you're editing
+  overMeshes.forEach(m => m.visible = (which === 'overlay'));
+  baseMeshes.forEach(m => m.visible = (which === 'base'));
+}
+
+btnBase.addEventListener('click', () => setLayer('base'));
+btnOver.addEventListener('click', () => setLayer('overlay'));
+
+const btnBoth = document.getElementById('layerBoth');
+btnBoth.addEventListener('click', () => {
+  btnBase.classList.remove('active');
+  btnOver.classList.remove('active');
+  btnBoth.classList.add('active');
+  baseMeshes.forEach(m => m.visible = true);
+  overMeshes.forEach(m => m.visible = true);
 });
