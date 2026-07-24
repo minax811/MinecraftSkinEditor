@@ -123,15 +123,16 @@ scene.add(player);
 // ── camera and renderer ───────────────────────────────────
 const view = document.getElementById('view');
 const renderer = new THREE.WebGLRenderer({ canvas: view, antialias: true });
-renderer.setSize(500, 500);
+const VIEW_W = 380, VIEW_H = 560;
+renderer.setSize(VIEW_W, VIEW_H);
 renderer.setClearColor(0x2b2f3a);
 
 // ── camera ────────────────────────────────────────────────
-const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(40, VIEW_W / VIEW_H, 0.1, 1000);
 
 // where the camera sits, described as angles + distance
-const target = new THREE.Vector3(0, 17, 0);   // the point it looks at (chest height)
-let yaw = 0.5, pitch = 1.4, dist = 60;
+const target = new THREE.Vector3(0, 16, 0);   // the point it looks at (chest height)
+let yaw = 0.5, pitch = 1.4, dist = 72;
 
 function placeCamera() {
   camera.position.set(
@@ -196,6 +197,7 @@ let painting = false;
 let lastPixel = null;
 let color = '#ff0000';      // ← add this
 let layer = 'base';     // which layer painting targets
+let tool = 'paint';     // 'paint' or 'pick'
 
 const undoStack = [];
 const redoStack = [];
@@ -224,6 +226,16 @@ function paintAt(e, erase = false) {
 
   if (lastPixel && lastPixel.x === x && lastPixel.y === y) return;
   lastPixel = { x, y };
+
+  if (tool === 'pick') {
+    const [r, g, b, a] = sctx.getImageData(x, y, 1, 1).data;
+    if (a > 0) {                                   // ignore transparent pixels
+      const hex = '#' + [r, g, b].map(n => n.toString(16).padStart(2, '0')).join('');
+      color = hex;
+      colorInput.value = hex;                      // sync the picker
+    }
+    return;                                        // pick never paints
+  }
 
   if (erase) {
     sctx.clearRect(x, y, 1, 1);        // back to transparent
@@ -307,25 +319,30 @@ addEventListener('keydown', e => {
 //──────────────────Overlay─────────────────────────
 const btnBase = document.getElementById('layerBase');
 const btnOver = document.getElementById('layerOver');
+const btnBoth = document.getElementById('layerBoth');
 
-function setLayer(which) {
-  layer = which;
-  btnBase.classList.toggle('active', which === 'base');
-  btnOver.classList.toggle('active', which === 'overlay');
-
-  // show only the layer you're editing
-  overMeshes.forEach(m => m.visible = (which === 'overlay'));
-  baseMeshes.forEach(m => m.visible = (which === 'base'));
+function setActive(activeBtn) {
+  [btnBase, btnOver, btnBoth].forEach(b =>
+    b.classList.toggle('active', b === activeBtn));
 }
 
-btnBase.addEventListener('click', () => setLayer('base'));
-btnOver.addEventListener('click', () => setLayer('overlay'));
+btnBase.addEventListener('click', () => {
+  layer = 'base';
+  setActive(btnBase);
+  baseMeshes.forEach(m => m.visible = true);
+  overMeshes.forEach(m => m.visible = false);
+});
 
-const btnBoth = document.getElementById('layerBoth');
+btnOver.addEventListener('click', () => {
+  layer = 'overlay';
+  setActive(btnOver);
+  baseMeshes.forEach(m => m.visible = false);
+  overMeshes.forEach(m => m.visible = true);
+});
+
 btnBoth.addEventListener('click', () => {
-  btnBase.classList.remove('active');
-  btnOver.classList.remove('active');
-  btnBoth.classList.add('active');
+  setActive(btnBoth);
   baseMeshes.forEach(m => m.visible = true);
   overMeshes.forEach(m => m.visible = true);
+  // painting still targets whatever `layer` was last set to
 });

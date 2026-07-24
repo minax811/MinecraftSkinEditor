@@ -2,21 +2,35 @@
   <link rel="stylesheet" href="style.css">
 
   <div class="editor">
-    <canvas id="preview"></canvas>
 
-    <canvas id="view"></canvas>
+    <div class="panel-box preview-box">
+      <canvas id="preview"></canvas>
+    </div>
 
-    <div class="panel">
+    <div class="panel-box view-box">
+      <canvas id="view"></canvas>
+    </div>
+
+    <div class="panel-box panel">
       <input type="color" id="color" value="#ff0000">
       <div class="swatches" id="swatches"></div>
+
+      <div class="tools">
+        <button id="toolPaint" class="active">Paint</button>
+        <button id="toolPick">Pick</button>
+      </div>
+
+      <div class="layers">
+        <button id="layerBase">Base</button>
+        <button id="layerOver">Overlay</button>
+        <button id="layerBoth" class="active">Both View</button>
+      </div>
+
       <button id="save">Export skin</button>
     </div>
+
   </div>
-<div class="layers">
-  <button id="layerBase" class="active">Base</button>
-  <button id="layerOver">Overlay</button>
-</div>
-<button id="layerBoth">Both View</button>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="js/editor.js"></script>
 </body>

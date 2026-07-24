@@ -41,7 +41,7 @@ drop.addEventListener('drop', e => {
 
 // Validation checker area fr
 async function handleFile(file) {
-  errorEl.textContent = '';          // clear any previous complaint
+  errorEl.textContent = '';
 
   try {
     if (file.type !== 'image/png') throw new Error('PNG files only.');
@@ -49,10 +49,10 @@ async function handleFile(file) {
     const url = await fileToDataURL(file);
     const img = new Image();
     img.src = url;
-    await img.decode();              // throws if it isn't really a PNG
+    await img.decode();              // throws if it isnt really a png
 
     if (img.width !== 64 || img.height !== 64)
-      throw new Error(`Skins must be 64×64. That one is ${img.width}×${img.height}.`);        // If skin isnt 64 x64 pixels
+      throw new Error(`Skins must be 64×64. That one is ${img.width}×${img.height}.`);        // If skin/iamge isnt 64 x 64 pixels
 
     sessionStorage.setItem('skin', JSON.stringify({ mode: 'upload', data: url }));
     location.href = 'editor.html';
