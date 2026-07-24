@@ -272,6 +272,13 @@ function fillAt(x, y, rect) {
   // the colour we're replacing
   const s = idx(x, y);
   const target = [data[s], data[s + 1], data[s + 2], data[s + 3]];
+  const TOLERANCE = 12;
+
+  const matches = (i) =>
+    Math.abs(data[i]     - target[0]) <= TOLERANCE &&
+    Math.abs(data[i + 1] - target[1]) <= TOLERANCE &&
+    Math.abs(data[i + 2] - target[2]) <= TOLERANCE &&
+    Math.abs(data[i + 3] - target[3]) <= TOLERANCE;
 
   // the colour we're painting
   const nr = parseInt(color.slice(1, 3), 16);
@@ -279,7 +286,10 @@ function fillAt(x, y, rect) {
   const nb = parseInt(color.slice(5, 7), 16);
 
   // already that colour? nothing to do (and it'd loop forever)
-  if (target[0] === nr && target[1] === ng && target[2] === nb && target[3] === 255) return;
+  if (Math.abs(target[0] - nr) <= TOLERANCE &&
+      Math.abs(target[1] - ng) <= TOLERANCE &&
+      Math.abs(target[2] - nb) <= TOLERANCE &&
+      Math.abs(target[3] - 255) <= TOLERANCE) return;
 
   const queue = [[x, y]];
   while (queue.length) {
@@ -288,10 +298,7 @@ function fillAt(x, y, rect) {
     if (px < rx || px >= rx + rw || py < ry || py >= ry + rh) continue;
 
     const i = idx(px, py);
-    if (data[i]     !== target[0] ||
-        data[i + 1] !== target[1] ||
-        data[i + 2] !== target[2] ||
-        data[i + 3] !== target[3]) continue;
+    if (!matches(i)) continue;
 
     data[i] = nr; data[i + 1] = ng; data[i + 2] = nb; data[i + 3] = 255;
 
