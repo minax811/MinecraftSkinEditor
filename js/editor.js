@@ -79,6 +79,7 @@ function skinBox(w, h, d, u, v) {
   });
 
   uv.needsUpdate = true;
+  geo.userData.rects = rects;
   return geo;
 }
 
@@ -160,7 +161,8 @@ view.addEventListener('pointerdown', e => {
 });
 
 view.addEventListener('pointermove', e => {
-  if (painting) { paintAt(e, e.buttons === 2); return; }
+  if (painting && tool !== 'fill') { paintAt(e, e.buttons === 2); return; }
+  if (painting) return;
   if (!dragging) return;
   yaw   -= (e.clientX - last.x) * 0.01;
   pitch  = Math.max(0.1, Math.min(3.0, pitch - (e.clientY - last.y) * 0.01));
@@ -236,6 +238,17 @@ function paintAt(e, erase = false) {
     }
     return;                                        // pick never paints
   }
+  if (tool === 'fill') {
+    const rects = hits[0].object.geometry.userData.rects;
+    const rect  = rects.find(([rx, ry, rw, rh]) =>
+      x >= rx && x < rx + rw && y >= ry && y < ry + rh);
+    if (rect) {
+      fillAt(x, y, rect);
+      texture.needsUpdate = true;
+      show();
+    }
+    return;
+  }
 
   if (erase) {
     sctx.clearRect(x, y, 1, 1);        // back to transparent
@@ -246,6 +259,46 @@ function paintAt(e, erase = false) {
 
   texture.needsUpdate = true;
   show();
+}
+// ── Fill tool ─────────────────────────────────────────
+function fillAt(x, y, rect) {
+  const [rx, ry, rw, rh] = rect;
+  const img  = sctx.getImageData(rx, ry, rw, rh);
+  const data = img.data;
+
+  // index into the pixel array for a canvas coordinate
+  const idx = (px, py) => ((py - ry) * rw + (px - rx)) * 4;
+
+  // the colour we're replacing
+  const s = idx(x, y);
+  const target = [data[s], data[s + 1], data[s + 2], data[s + 3]];
+
+  // the colour we're painting
+  const nr = parseInt(color.slice(1, 3), 16);
+  const ng = parseInt(color.slice(3, 5), 16);
+  const nb = parseInt(color.slice(5, 7), 16);
+
+  // already that colour? nothing to do (and it'd loop forever)
+  if (target[0] === nr && target[1] === ng && target[2] === nb && target[3] === 255) return;
+
+  const queue = [[x, y]];
+  while (queue.length) {
+    const [px, py] = queue.pop();
+
+    if (px < rx || px >= rx + rw || py < ry || py >= ry + rh) continue;
+
+    const i = idx(px, py);
+    if (data[i]     !== target[0] ||
+        data[i + 1] !== target[1] ||
+        data[i + 2] !== target[2] ||
+        data[i + 3] !== target[3]) continue;
+
+    data[i] = nr; data[i + 1] = ng; data[i + 2] = nb; data[i + 3] = 255;
+
+    queue.push([px + 1, py], [px - 1, py], [px, py + 1], [px, py - 1]);
+  }
+
+  sctx.putImageData(img, rx, ry);
 }
 
 // ── colour picker ─────────────────────────────────────────
@@ -346,3 +399,17 @@ btnBoth.addEventListener('click', () => {
   overMeshes.forEach(m => m.visible = true);
   // painting still targets whatever `layer` was last set to
 });
+
+//──────────────────Tool Buttons─────────────────────────
+const btnPaint = document.getElementById('toolPaint');
+const btnPick  = document.getElementById('toolPick');
+const btnFill  = document.getElementById('toolFill');
+
+function setTool(name, btn) {
+  tool = name;
+  [btnPaint, btnPick, btnFill].forEach(b => b.classList.toggle('active', b === btn));
+}
+
+btnPaint.addEventListener('click', () => setTool('paint', btnPaint));
+btnPick.addEventListener('click',  () => setTool('pick',  btnPick));
+btnFill.addEventListener('click',  () => setTool('fill',  btnFill));
